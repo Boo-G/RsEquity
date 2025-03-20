@@ -7,30 +7,38 @@ import net.runelite.client.eventbus.Subscribe;
 
 import javax.inject.Inject;
 
-
-// 📌 GrandExchangeListener.java (Stores item purchase prices)
-// Captures Grand Exchange transactions.
 public class GrandExchangeListener
 {
+    private final BankPriceManager bankPriceManager;
+
     @Inject
-    private BankPriceManager bankPriceManager;
+    public GrandExchangeListener(BankPriceManager bankPriceManager)
+    {
+        this.bankPriceManager = bankPriceManager;
+    }
 
     @Subscribe
     public void onGrandExchangeOfferChanged(GrandExchangeOfferChanged event)
     {
         GrandExchangeOffer offer = event.getOffer();
-        
+
+        // Only store the price if the item was fully bought
         if (offer.getState() == GrandExchangeOfferState.BOUGHT)
         {
             int itemId = offer.getItemId();
-            int pricePerItem = offer.getSpent() / offer.getQuantitySold();
-    
-            bankPriceManager.storePurchasePrice(itemId, pricePerItem);
-            
-            // Print purchase info in chat
-            plugin.sendChatMessage("<col=ff9800>GE Purchase:</col> Bought item " + itemId + " for " + pricePerItem + " gp each.");
+            int totalSpent = offer.getSpent();
+            int quantityBought = offer.getQuantitySold();
+
+            if (quantityBought > 0)
+            {
+                int pricePerItem = totalSpent / quantityBought;
+                bankPriceManager.storePurchasePrice(itemId, pricePerItem);
+
+                BankPricePlugin.getInstance().sendChatMessage(
+                    "<col=ff9800>GE Purchase:</col> Bought " + quantityBought + "x " + itemId +
+                    " for " + pricePerItem + " gp each."
+                );
+            }
         }
     }
-    
-    
 }

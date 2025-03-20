@@ -6,21 +6,25 @@ import net.runelite.client.eventbus.Subscribe;
 
 import javax.inject.Inject;
 
-// 📌 BankListener.java (Detects when the bank is opened)
-// Ensures the plugin updates prices when the bank is opened.
 public class BankListener
 {
+    private final BankPriceManager bankPriceManager;
+
     @Inject
-    private BankPriceManager bankPriceManager;
+    public BankListener(BankPriceManager bankPriceManager)
+    {
+        this.bankPriceManager = bankPriceManager;
+    }
 
     @Subscribe
     public void onWidgetLoaded(WidgetLoaded event)
     {
         if (event.getGroupId() == WidgetID.BANK_GROUP_ID)
         {
-            log.info("Bank opened!");
-            // updateBankPrices();
+            BankPricePlugin.getInstance().sendChatMessage("<col=00ff00>Bank Opened! Updating prices...</col>");
+
+            // Fetch and update item prices when the bank is opened
+            bankPriceManager.updateBankPrices();
         }
     }
-    
 }
